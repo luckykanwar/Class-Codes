@@ -1,0 +1,33 @@
+div{
+	font-size: 20px;
+}
+
+p{
+	font-family: arial;
+	font-size : 20px;
+	color: yellow;
+}
+
+@media (max-width: 767px){
+	p{
+		font-family: "Times New Roman" times serif;
+		font-size : 30px;
+		color: blue;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 900px){
+	p{
+		font-family: courier;
+		font-size : 50px;
+		color: black;
+	}
+}
+
+@media (min-width: 901px){
+	p{
+		font-family: helvetica;
+		font-size : 60px;
+		color: red;
+	}
+}
