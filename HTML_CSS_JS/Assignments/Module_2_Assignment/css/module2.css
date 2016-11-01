@@ -11,6 +11,10 @@ section{
 	margin : 10px;
 }
 
+p{
+	word-break:break-all;
+}
+
 .row{
 	width: 100%;
 }
@@ -18,30 +22,54 @@ section{
 .divBorder{
 	border: solid 1px black;
 	position: relative;
-}
-
-p{
-	word-break: break-all
+	background-color: grey;
+	margin-left:3px;
+	margin-top: 4px;
 }
 
 #chicken{
 	position: relative;
-	margin-left: 80%;
+	border: solid 1px black;
+	margin-top: 0;
+	background-color: red;
+	font-weight: bold;
+	text-align: center;
+	font-size: 125%;
+	margin-bottom: 0;
+	margin-top: 0;
+	padding: 0;
+	margin-left:70%;
 }
 
 #beef{
 	position: relative;
-	margin-left: 85%;
+	border: solid 1px black;
+	margin-top: 0;
+	background-color: blue;
+	font-weight: bold;
+	text-align: center;
+	font-size: 125%;
+	margin-bottom: 0;
+	margin-top: 0;
+	margin-left:70%;
 }
 
 #sushi{
 	position: relative;
-	margin-left: 90%;
+	border: solid 1px black;
+	margin-top: 0;
+	background-color: yellow;
+	font-weight: bold;
+	text-align: center;
+	font-size: 125%;
+	margin-bottom: 0;
+	margin-top: 0;
+	margin-left:70%;
 }
 
 @media (min-width:992px){
 	.p-lg-4{
-		width: 33.32%;
+		width: 33%;
 		float : left;
 	}
 }
