@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1479680169 source:/home/nitin/DistributedSystems/Project_2_DS/OrderedMulticasting/ordered.c
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<time.h>
+	<string.h>
+	<stdio.h>
+	<pthread.h>
+
+1479709478 source:/home/nitin/DistributedSystems/Project_2_DS/OrderedMulticasting/ordered1.c
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<time.h>
+	<string.h>
+	<stdio.h>
+	<pthread.h>
+

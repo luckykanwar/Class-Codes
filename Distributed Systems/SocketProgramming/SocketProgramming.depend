@@ -1,0 +1,34 @@
+# depslib dependency file v1.0
+1475454919 source:/home/nitin/DistributedSystems/SocketProgramming/main.c
+	<stdio.h>
+	<stdlib.h>
+
+1475456775 source:/home/nitin/DistributedSystems/SocketProgramming/client.c
+	<stdio.h>
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<netdb.h>
+
+1476434004 source:/home/nitin/DistributedSystems/SocketProgramming/client1.c
+	<stdio.h>
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<netdb.h>
+	<fcntl.h>
+	<unistd.h>
+	<string.h>
+
+1476074951 source:/home/nitin/DistributedSystems/SocketProgramming/Client_Latest.c
+	<sys/socket.h>
+	<sys/types.h>
+	<netinet/in.h>
+	<netdb.h>
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+	<unistd.h>
+	<errno.h>
+	<arpa/inet.h>
+

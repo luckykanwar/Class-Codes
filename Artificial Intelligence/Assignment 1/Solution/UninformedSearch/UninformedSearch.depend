@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1485402183 source:/media/nitin/Stuff/UTA/UTA Spring 2017/Course Related/Artificial Intelligence by Vamsikrishna Gopikrishnan/Homework and Assignments/Assignment 1/Solution/UninformedSearch/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+
+1485393111 source:/media/nitin/Stuff/UTA/UTA Spring 2017/Course Related/Artificial Intelligence by Vamsikrishna Gopikrishnan/Homework and Assignments/Assignment 1/Solution/UninformedSearch/SecondIteration.c
+	<stdio.h>
+	<stdlib.h>
+

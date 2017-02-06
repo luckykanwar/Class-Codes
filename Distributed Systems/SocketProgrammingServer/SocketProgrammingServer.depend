@@ -1,0 +1,15 @@
+# depslib dependency file v1.0
+1475456768 source:/home/nitin/DistributedSystems/SocketProgrammingServer/server.c
+	<stdio.h>
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+
+1476442218 source:/home/nitin/DistributedSystems/SocketProgrammingServer/server1.c
+	<stdio.h>
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<fcntl.h>
+	<unistd.h>
+

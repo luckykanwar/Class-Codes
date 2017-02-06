@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1479594983 source:/home/nitin/DistributedSystems/Project_2_DS/multicast_sender/Multicast_Sender/sender.c
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<time.h>
+	<string.h>
+	<stdio.h>
+

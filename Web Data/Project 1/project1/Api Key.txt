@@ -1,0 +1,3 @@
+c8aa267cf0326c869d6aa994d7cd0fcf
+
+http://api.openweathermap.org/data/2.5/forecast/city?id=524901&APPID=c8aa267cf0326c869d6aa994d7cd0fcf

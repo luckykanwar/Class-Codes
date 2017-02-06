@@ -1,0 +1,600 @@
+
+Stack Exchange Inbox Reputation and Badges
+sign up log in tour help
+
+Stack Overflow
+
+    Questions
+    Jobs
+    Documentation
+    Tags
+    Users
+    Badges
+
+    Ask Question
+
+x Dismiss
+Join the Stack Overflow Community
+Stack Overflow is a community of 4.7 million programmers, just like you, helping each other.
+Join them; it only takes a minute:
+Sign up
+Is there a way for multiple processes to share a listening socket?
+up vote
+63
+down vote
+favorite
+53
+	
+
+In socket programming, you create a listening socket and then for each client that connects, you get a normal stream socket that you can use to handle the client's request. The OS manages the queue of incoming connections behind the scenes.
+
+Two processes cannot bind to the same port at the same time - by default, anyway.
+
+I'm wondering if there's a way (on any well-known OS, especially Windows) to launch multiple instances of a process, such that they all bind to the socket, and so they effectively share the queue. Each process instance could then be single threaded; it would just block when accepting a new connection. When a client connected, one of the idle process instances would accept that client.
+
+This would allow each process to have a very simple, single-threaded implementation, sharing nothing unless through explicit shared memory, and the user would be able to adjust the processing bandwidth by starting more instances.
+
+Does such a feature exist?
+
+Edit: For those asking "Why not use threads?" Obviously threads are an option. But with multiple threads in a single process, all objects are shareable and great care has to be taken to ensure that objects are either not shared, or are only visible to one thread at a time, or are absolutely immutable, and most popular languages and runtimes lack built-in support for managing this complexity.
+
+By starting a handful of identical worker processes, you would get a concurrent system in which the default is no sharing, making it much easier to build a correct and scalable implementation.
+sockets concurrency
+shareimprove this question
+	
+edited Mar 22 '09 at 13:53
+	
+asked Mar 22 '09 at 11:56
+Daniel Earwicker
+80.2k27160238
+	
+2 	 
+	
+I agree, multiple processes can make it easier to create a correct and robust implementation. Scalable, I'm not sure, it depends on your problem domain. – MarkR Mar 22 '09 at 19:21
+add a comment
+10 Answers
+active
+oldest
+votes
+up vote
+66
+down vote
+accepted
+	
+
+You can share a socket between two (or more) processes in Linux and even Windows.
+
+Under Linux (Or POSIX type OS), using fork() will cause the forked child to have copies of all the parent's file descriptors. Any that it does not close will continue to be shared, and (for example with a TCP listening socket) can be used to accept() new sockets for clients. This is how many servers, including Apache in most cases, work.
+
+On Windows the same thing is basically true, except there is no fork() system call so the parent process will need to use CreateProcess or something to create a child process (which can of course use the same executable) and needs to pass it an inheritable handle.
+
+Making a listening socket an inheritable handle is not a completely trivial activity but not too tricky either. DuplicateHandle() needs to be used to create a duplicate handle (still in the parent process however), which will have the inheritable flag set on it. Then you can give that handle in the STARTUPINFO structure to the child process in CreateProcess as a STDIN, OUT or ERR handle (assuming you didn't want to use it for anything else).
+
+EDIT:
+
+Reading the MDSN library , it appears that WSADuplicateSocket is a more robust or correct mechanism of doing this; it is still nontrivial because the parent/child processes need to work out which handle needs to be duplicated by some IPC mechanism (although this could be as simple as a file in the filesystem)
+
+CLARIFICATION:
+
+In answer to the OP's original question, no, multiple processes cannot bind(); just the original parent process would call bind(), listen() etc, the child processes would just process requests by accept(), send(), recv() etc.
+shareimprove this answer
+	
+edited Aug 14 '14 at 3:17
+user
+2,32852446
+	
+answered Mar 22 '09 at 12:02
+MarkR
+46.1k886118
+	
+2 	 
+	
+Multiple processes can bind by specifying the SocketOptionName.ReuseAddress socket option. – sipwiz Mar 22 '09 at 12:42
+   	 
+	
+But what's the point? Processes are more heavyweight than threads anyway. – Anton Tykhyy Mar 22 '09 at 13:35
+   	 
+	
+Excellent, nice and simple. I didn't think of inheritable handles. Will try it and report back! – Daniel Earwicker Mar 22 '09 at 13:54
+6 	 
+	
+Processes are more heavyweight than threads, but as they only share things explicitly shared, less synchronisation is required which makes programming easier and could even be more efficient in some cases. – MarkR Mar 22 '09 at 19:18
+8 	 
+	
+Moreover, if a child process crashes or breaks in some way, it is less likely to affect the parent. – MarkR Mar 22 '09 at 19:20
+show 5 more comments
+up vote
+18
+down vote
+	
+
+Most others have provided the technical reasons why this works. Here's some python code you can run to demonstrate this for yourself:
+
+import socket
+import os
+
+def main():
+    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serversocket.bind(("127.0.0.1", 8888))
+    serversocket.listen(0)
+
+    # Child Process
+    if os.fork() == 0:
+        accept_conn("child", serversocket)
+
+    accept_conn("parent", serversocket)
+
+def accept_conn(message, s):
+    while True:
+        c, addr = s.accept()
+        print 'Got connection from in %s' % message
+        c.send('Thank you for your connecting to %s\n' % message)
+        c.close()
+
+if __name__ == "__main__":
+    main()
+
+Note that there are indeed two process id's listening:
+
+$ lsof -i :8888
+COMMAND   PID    USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  26972 avaitla    3u  IPv4 0xc26aa26de5a8fc6f      0t0  TCP localhost:ddi-tcp-1 (LISTEN)
+Python  26973 avaitla    3u  IPv4 0xc26aa26de5a8fc6f      0t0  TCP localhost:ddi-tcp-1 (LISTEN)
+
+Here are the results from running telnet and the program:
+
+$ telnet 127.0.0.1 8888
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+Thank you for your connecting to parent
+Connection closed by foreign host.
+$ telnet 127.0.0.1 8888
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+Thank you for your connecting to child
+Connection closed by foreign host.
+$ telnet 127.0.0.1 8888
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+Thank you for your connecting to parent
+Connection closed by foreign host.
+
+$ python prefork.py 
+Got connection from in parent
+Got connection from in child
+Got connection from in parent
+
+shareimprove this answer
+	
+edited Sep 16 '14 at 20:17
+Samuel Peter
+9301718
+	
+answered Oct 9 '13 at 10:27
+anil
+1,7961020
+	
+   	 
+	
+So for one connection, either parent or child gets it. But who gets the connection is indeterministic, right? – Hot.PxL May 2 '15 at 5:36
+   	 
+	
+yes, I think it depends on what process is scheduled to run by the os. – anil May 20 '15 at 0:50
+add a comment
+up vote
+11
+down vote
+	
+
+I would like to add that the sockets can be shared on Unix/Linux via AF__UNIX sockets (inter-process sockets). What seems to happen is a new socket descriptor is created that is somewhat of an alias to the original one. This new socket descriptor is sent via the AFUNIX socket to the other process. This is especially useful in cases where a process cannot fork() to share it's file descriptors. For example, when using libraries that prevent against this due to threading issues. You should create a Unix domain socket and use libancillary to send over the descriptor.
+
+See:
+
+    https://www.linuxquestions.org/questions/programming-9/how-to-share-socket-between-processes-289978/
+
+For creating AF_UNIX Sockets:
+
+    http://docs.sun.com/app/docs/doc/817-4415/portmapper-51908?a=view
+
+For example code:
+
+    http://lists.canonical.org/pipermail/kragen-hacks/2002-January/000292.html
+    http://cpansearch.perl.org/src/SAMPO/Socket-PassAccessRights-0.03/passfd.c
+
+shareimprove this answer
+	
+edited Jul 18 '09 at 23:41
+	
+answered Jul 16 '09 at 18:29
+zachthehack
+14114
+	
+add a comment
+up vote
+9
+down vote
+	
+
+Looks like this question has already been answered fully by MarkR and zackthehack but I would like to add that Nginx is an example of the listening socket inheritance model.
+
+Here is a good description:
+
+    http://zimbra.imladris.sk/download/src/GNR-601/ThirdParty/nginx/docs/IMPLEMENTATION
+
+             Implementation of HTTP Auth Server Round-Robin and
+                    Memory Caching for NGINX Email Proxy
+
+                                June 6, 2007
+                 Md. Mansoor Peerbhoy <mansoor@zimbra.com>
+
+    ...
+
+    Flow of an NGINX worker process
+
+    After the main NGINX process reads the configuration file and forks into the configured number of worker processes, each worker process enters into a loop where it waits for any events on its respective set of sockets.
+
+    Each worker process starts off with just the listening sockets, since there are no connections available yet. Therefore, the event descriptor set for each worker process starts off with just the listening sockets.
+
+    (NOTE) NGINX can be configured to use any one of several event polling mechanisms: aio/devpoll/epoll/eventpoll/kqueue/poll/rtsig/select
+
+    When a connection arrives on any of the listening sockets (POP3/IMAP/SMTP), each worker process emerges from its event poll, since each NGINX worker process inherits the listening socket. Then, each NGINX worker process will attempt to acquire a global mutex. One of the worker processes will acquire the lock, whereas the others will go back to their respective event polling loops.
+
+    Meanwhile, the worker process that acquired the global mutex will examine the triggered events, and will create necessary work queue requests for each event that was triggered. An event corresponds to a single socket descriptor from the set of descriptors that the worker was watching for events from.
+
+    If the triggered event corresponds to a new incoming connection, NGINX accepts the connection from the listening socket. Then, it associates a context data structure with the file descriptor. This context holds information about the connection (whether POP3/IMAP/SMTP, whether the user is yet authenticated, etc). Then, this newly constructed socket is added into the event descriptor set for that worker process.
+
+    The worker now relinquishes the mutex (which means that any events that arrived on other workers can proceeed), and starts processing each request that was earlier queued. Each request corresponds to an event that was signaled. From each socket descriptor that was signaled, the worker process retrieves the corresponding context data structure that was earlier associated with that descriptor, and then calls the corresponding call back functions that perform actions based on the state of that connection. For instance, in case of a newly established IMAP connection, the first thing that NGINX will do is to write the standard IMAP welcome message onto the
+    connected socket (* OK IMAP4 ready).
+
+    By and by, each worker process completes processing the work queue entry for each outstanding event, and returns back to its event polling loop. Once any connection is established with a client, the events usually are more rapid, since whenever the connected socket is ready for reading, the read event is triggered, and the corresponding action must be taken.
+
+shareimprove this answer
+	
+answered Sep 2 '11 at 9:33
+richardw
+60256
+	
+3 	 
+	
+Thanks for the excellent quote! – Zaar Hai Jan 7 '13 at 18:55
+add a comment
+up vote
+4
+down vote
+	
+
+Not sure how relevant this to the original question, but in kernel 3.9 there was a patch adding a TCP/UDP feature: TCP and UDP support for the SO_REUSEPORT socket option; The new socket option allows multiple sockets on the same host to bind to the same port, and is intended to improve the performance of multithreaded network server applications running on top of multicore systems. more information can be found in the LWN link LWN SO_REUSEPORT in Linux Kernel 3.9 as mentioned in the reference link:
+
+the SO_REUSEPORT option is non-standard, but available in a similar form on a number of other UNIX systems (notably, the BSDs, where the idea originated). It seems to offer a useful alternative for squeezing the maximum performance out of network applications running on multicore systems
+shareimprove this answer
+	
+answered May 4 '14 at 3:25
+Walid
+17616
+	
+add a comment
+up vote
+2
+down vote
+	
+
+Another approach (that avoids many complex details) in Windows if you are using HTTP, is to use HTTP.SYS. This allows multiple processes to listen to different URLs on the same port. On Server 2003/2008/Vista/7 this is how IIS works, so you can share ports with it. (On XP SP2 HTTP.SYS is supported, but IIS5.1 does not use it.)
+
+Other high level APIs (including WCF) make use of HTTP.SYS.
+shareimprove this answer
+	
+answered Mar 22 '09 at 12:19
+Richard
+72.7k13113185
+	
+add a comment
+up vote
+2
+down vote
+	
+
+Have a single task whose sole job is to listen for incoming connections. When a connection is received, it accepts the connection - this creates a separate socket descriptor. The accepted socket is passed to one of your available worker tasks, and the main task goes back to listening.
+
+s = socket();
+bind(s);
+listen(s);
+while (1) {
+  s2 = accept(s);
+  send_to_worker(s2);
+}
+
+shareimprove this answer
+	
+answered Mar 22 '09 at 13:44
+HUAGHAGUAH
+1,51185
+	
+   	 
+	
+How is the socket passed to a worker? Bear in mind that the idea is that a worker is a separate process. – Daniel Earwicker Mar 22 '09 at 14:03
+   	 
+	
+fork() perhaps, or one of the other ideas above. Or maybe you completely separate the socket I/O from data processing; send the payload to worker processes via an IPC mechanism. OpenSSH and other OpenBSD tools use this methodology (without threads). – HUAGHAGUAH Mar 22 '09 at 15:03
+add a comment
+up vote
+2
+down vote
+	
+
+Under Windows (and Linux) it is possible for one process to open a socket and then pass that socket to another process such that that second process can also then use that socket (and pass it on in turn, should it wish to do so).
+
+The crucial function call is WSADuplicateSocket().
+
+This populates a structure with information about an existing socket. This structure then, via an IPC mechanism of your choice, is passed to another existing process (note I say existing - when you call WSADuplicateSocket(), you must indicate the target process which will receive the emitted information).
+
+The receiving process can then call WSASocket(), passing in this structure of information, and receive a handle to the underlying socket.
+
+Both processes now hold a handle to the same underlying socket.
+shareimprove this answer
+	
+answered Mar 28 '09 at 18:15
+user82238
+	
+add a comment
+up vote
+1
+down vote
+	
+
+It sounds like what you want is one process listening on for new clients and then hand off the connection once you get a connection. To do that across threads is easy and in .Net you even have the BeginAccept etc. methods to take care of a lot of the plumbing for you. To hand off the connections across process boundaries would be complicated and would not have any performance advantages.
+
+Alternatively you can have multiple processes bound and listening on the same socket.
+
+TcpListener tcpServer = new TcpListener(IPAddress.Loopback, 10090);
+tcpServer.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+tcpServer.Start();
+
+while (true)
+{
+    TcpClient client = tcpServer.AcceptTcpClient();
+    Console.WriteLine("TCP client accepted from " + client.Client.RemoteEndPoint + ".");
+}
+
+If you fire up two processes each executing the above code it will work and the first process seems to get all the connections. If the first process is killed the second one then gets the connections. With socket sharing like that I'm not sure exactly how Windows decides which process gets new connections although the quick test does point to the oldest process getting them first. As to whether it shares if the first process is busy or anything like that I don't know.
+shareimprove this answer
+	
+answered Mar 22 '09 at 12:18
+sipwiz
+19.9k1870125
+	
+add a comment
+up vote
+1
+down vote
+	
+
+Starting with Linux 3.9, you can set the SO_REUSEPORT on a socket and then have multiple non-related processes share that socket. That's simpler than the prefork scheme, no more signal troubles, fd leak to child processes, etc.
+
+Linux 3.9 introduced new way of writing socket servers
+
+The SO_REUSEPORT socket option
+shareimprove this answer
+	
+answered Feb 20 at 18:20
+Benoît
+1,0451922
+	
+add a comment
+Your Answer
+
+ 
+Sign up or log in
+
+Sign up using Google
+
+Sign up using Facebook
+
+Sign up using Email and Password
+Post as a guest
+Name
+Email
+
+By posting your answer, you agree to the privacy policy and terms of service.
+Not the answer you're looking for? Browse other questions tagged sockets concurrency or ask your own question.
+
+asked
+	
+
+7 years ago
+
+viewed
+	
+
+44628 times
+
+active
+	
+
+7 months ago
+Looking for a job?
+
+    Software Engineer: Network
+    DigitalOceanNo office location
+    RemoteRelocation
+    network-programmingsdn
+    Server Administrator
+    InmarFort Worth, TX
+    linuxwindows
+
+Linked
+14
+TwistedWeb on multicore/multiprocessor
+6
+Socket handle transfer between independent processes
+8
+Can UDP broadcasts be received by multiple apps on the same computer?
+0
+What happens when parent-child listen on the same port?
+4
+C++ Problem writing to a file
+1
+Two processes sharing the same UDP port for sending
+2
+is it possible to reuse TCP port numbers in linux
+1
+Share socket between processes in Perl (without fork)?
+1
+How can non-exclusive ports exist when tcp identify applications using 16-bit port number?
+2
+Sharing port 443 between IIS and a C++ service
+see more linked questions…
+Related
+4
+C++ socket concurrent server
+1
+Boost Asio, io_service handles only one socket per core
+2
+Streaming data over sockets
+1
+Co-ordinating the accept for a shared listenning socket between multiple processes
+0
+Multithreaded server shared ArrayList
+0
+How to measure the time when using Sockets and concurrency
+0
+Create multiple listening sockets
+0
+Handle Java socket concurrency
+0
+Is it needed to use mutex on a listener socket shared between child processes?
+0
+Keeping track of clients across multiple servers
+Hot Network Questions
+
+    Why did it take 10,000 years to discover the Bajoran wormhole?
+    Why is the spacesuit design so strange in Sunshine?
+    What are Imperial officers wearing here?
+    What is the most expensive item I could buy with £50?
+    Game of Life, a shorter story
+    Which option did Harry Potter pick for the knight bus?
+    Is there any job that can't be automated?
+    Removing elements from an array that are in another array
+    Is there a place in academia for someone who compulsively solves every problem on their own?
+    need book id, written before 1996, it's about a teleport company that sends students learning to become colonists to another world
+    Solve and naming variables
+    Digital Diversity
+    With the passing of Thai King Bhumibol, are there any customs/etiquette as a traveler I should be aware of?
+    How to add an sObject to a sublislist?
+    How do computers remember where they store things?
+    Near Earth vs Newtonian gravitational potential
+    What emergency gear and tools should I keep in my vehicle?
+    Does chilli get milder with cooking?
+    How to cope with too slow Wi-Fi at hotel?
+    Why are so many metros underground? Isn't that more expensive than an elevated system?
+    Going to be away for 4 months, should we turn off the refrigerator or leave it on with water inside?
+    Can a Legendary monster ignore a diviner's Portent and choose to pass the save anyway?
+    How to handle a senior developer diva who seems unaware that his skills are obsolete?
+    Make all the statements true
+
+question feed
+about us tour help blog chat data legal privacy policy work here advertising info mobile contact us feedback
+Technology 	Life / Arts 	Culture / Recreation 	Science 	Other
+
+    Stack Overflow
+    Server Fault
+    Super User
+    Web Applications
+    Ask Ubuntu
+    Webmasters
+    Game Development
+    TeX - LaTeX
+
+	
+
+    Programmers
+    Unix & Linux
+    Ask Different (Apple)
+    WordPress Development
+    Geographic Information Systems
+    Electrical Engineering
+    Android Enthusiasts
+    Information Security
+
+	
+
+    Database Administrators
+    Drupal Answers
+    SharePoint
+    User Experience
+    Mathematica
+    Salesforce
+    ExpressionEngine® Answers
+    Cryptography
+
+	
+
+    Code Review
+    Magento
+    Signal Processing
+    Raspberry Pi
+    Programming Puzzles & Code Golf
+    more (7)
+
+	
+
+    Photography
+    Science Fiction & Fantasy
+    Graphic Design
+    Movies & TV
+    Music: Practice & Theory
+    Seasoned Advice (cooking)
+    Home Improvement
+    Personal Finance & Money
+
+	
+
+    Academia
+    more (8)
+
+	
+
+    English Language & Usage
+    Skeptics
+    Mi Yodeya (Judaism)
+    Travel
+    Christianity
+    English Language Learners
+    Japanese Language
+    Arqade (gaming)
+
+	
+
+    Bicycles
+    Role-playing Games
+    Anime & Manga
+    more (18)
+
+	
+
+    Mathematics
+    Cross Validated (stats)
+    Theoretical Computer Science
+    Physics
+    MathOverflow
+    Chemistry
+    Biology
+    Computer Science
+
+	
+
+    Philosophy
+    more (3)
+
+	
+
+    Stack Apps
+    Meta Stack Exchange
+    Area 51
+    Stack Overflow Careers
+
+site design / logo © 2016 Stack Exchange Inc; user contributions licensed under cc by-sa 3.0 with attribution required
+rev 2016.10.14.4091
+
