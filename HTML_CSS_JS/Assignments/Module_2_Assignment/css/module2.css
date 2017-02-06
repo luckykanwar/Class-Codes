@@ -23,7 +23,7 @@ p{
 	border: solid 1px black;
 	position: relative;
 	background-color: grey;
-	margin-left:3px;
+	margin-left:2px;
 	margin-top: 4px;
 }
 
@@ -76,7 +76,7 @@ p{
 
 @media (min-width:768px) and (max-width:991px){
 	.p-md-6{
-		width: 49.6%;
+		width: 50%;
 		float : left;
 	}	
 
