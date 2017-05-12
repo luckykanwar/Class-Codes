@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1484124882 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Structures/Structures/main.c
+	<stdio.h>
+	<stdlib.h>
+

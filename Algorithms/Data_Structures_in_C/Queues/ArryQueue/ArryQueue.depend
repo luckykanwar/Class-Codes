@@ -1,0 +1,25 @@
+# depslib dependency file v1.0
+1486536526 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Queues/ArryQueue/ArrayQueue.c
+	<stdio.h>
+	<stdlib.h>
+
+1486543319 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Queues/ArryQueue/LinkedQueue.c
+	<stdio.h>
+	<stdlib.h>
+
+1486612196 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Queues/ArryQueue/CircularQueue.c
+	<stdio.h>
+	<stdlib.h>
+
+1486722808 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Queues/ArryQueue/Dequeue.c
+	<stdio.h>
+	<stdlib.h>
+
+1486882421 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Queues/ArryQueue/PriorityQueue.c
+	<stdio.h>
+	<stdlib.h>
+
+1486893522 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Queues/ArryQueue/JosephusProblem.c
+	<stdio.h>
+	<stdlib.h>
+

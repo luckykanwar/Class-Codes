@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1485245114 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Stack/Stacks/ArrayStacks.c
+	<stdio.h>
+	<stdlib.h>
+
+1485509719 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Stack/Stacks/LinkedListStack.c
+	<stdio.h>
+	<stdlib.h>
+
+1486017592 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Stack/Stacks/MultipleStacks.c
+	<stdio.h>
+	<stdlib.h>
+
+1486115920 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Stack/Stacks/ReversingList.c
+	<stdio.h>
+	<stdlib.h>
+
+1486200885 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Stack/Stacks/TowerOfHanoi.c
+	<stdio.h>
+	<stdlib.h>
+

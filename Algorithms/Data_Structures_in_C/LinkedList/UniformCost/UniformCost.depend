@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1485418771 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/LinkedList/UniformCost/main.cpp
+	<iostream>
+	<vector>
+	<list>
+	<queue>
+	<algorithm>
+	<stdlib.h>
+	<string.h>
+

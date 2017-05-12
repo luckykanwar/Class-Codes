@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1486978867 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Trees/Trees/main.c
+	<stdio.h>
+	<stdlib.h>
+
+1487152780 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/Trees/Trees/BinarySearchTree.c
+	<stdio.h>
+	<stdlib.h>
+

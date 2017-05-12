@@ -1,0 +1,17 @@
+# depslib dependency file v1.0
+1484466989 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/LinkedList/LinkedLists/main.c
+	<stdio.h>
+	<stdlib.h>
+
+1484468024 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/LinkedList/LinkedLists/SingleLinkedList.c
+	<stdio.h>
+	<stdlib.h>
+
+1484606981 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/LinkedList/LinkedLists/CircularLinkedList.c
+	<stdio.h>
+	<stdlib.h>
+
+1484627062 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/LinkedList/LinkedLists/DoubleLinkedList.c
+	<stdio.h>
+	<stdlib.h>
+

@@ -1,0 +1,14 @@
+# depslib dependency file v1.0
+1485774674 source:/media/nitin/Stuff/Portfolio/Data_Structures_in_C/LinkedList/Testing/main.cpp
+	<iostream>
+	<vector>
+	<list>
+	<queue>
+	<algorithm>
+	<stdlib.h>
+	<string>
+	<vector>
+	<iterator>
+	<fstream>
+	<sstream>
+
